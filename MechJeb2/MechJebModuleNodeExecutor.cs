@@ -93,6 +93,7 @@ namespace MuMech
             State      = States.WARPALIGN;
             _direction = Vector3d.zero;
             _dvLeft    = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
+            _alignedSince = double.NaN;
             Core.Thrust.ThrustOff();
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
@@ -106,6 +107,7 @@ namespace MuMech
             Users.Clear();
             _direction = Vector3d.zero;
             _dvLeft    = 0;
+            _alignedSince = double.NaN;
             State      = States.IDLE;
         }
 
@@ -114,6 +116,7 @@ namespace MuMech
             State      = States.IDLE;
             _direction = Vector3d.zero;
             _dvLeft    = 0;
+            _alignedSince = double.NaN;
         }
 
         protected override void OnModuleDisabled()
@@ -123,6 +126,7 @@ namespace MuMech
             Core.Thrust.Users.Remove(this);
             State   = States.IDLE;
             _dvLeft = 0;
+            _alignedSince = double.NaN;
         }
 
         private enum Mode { ONE_NODE, ALL_NODES }
@@ -136,6 +140,7 @@ namespace MuMech
         private Vector3d _direction; // de-rotated world vector
         private Vector3d _worldDirection => Planetarium.fetch.rotation * _direction;
         private double   _ignitionUT;
+        private double   _alignedSince = double.NaN;
         private bool     _hasNodes => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
         private double   _ullageUntil;
 
@@ -226,15 +231,25 @@ namespace MuMech
 
             if (!Autowarp)
             {
+                _alignedSince = double.NaN;
                 SetAttitude();
                 return;
             }
 
-            if (MuUtils.PhysicsRunning() ? AlignedAndSettled() : AngleFromDirection() < Deg2Rad(10))
+            const double StableWarpDelay = 0.25;
+
+            bool alignedAndSettled = MuUtils.PhysicsRunning() ? AlignedAndSettled() : AngleFromDirection() < Deg2Rad(10);
+            if (alignedAndSettled)
             {
-                Core.Warp.WarpToUT(_ignitionUT - LeadTime);
+                if (double.IsNaN(_alignedSince))
+                    _alignedSince = VesselState.time;
+                else if (VesselState.time - _alignedSince >= StableWarpDelay)
+                    Core.Warp.WarpToUT(_ignitionUT - LeadTime);
+
                 return;
             }
+
+            _alignedSince = double.NaN;
 
             double timeToBurn = _ignitionUT - VesselState.time;
 
