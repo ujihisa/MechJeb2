@@ -1,0 +1,26 @@
+services:
+  builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - ${KSPDIR:?Set KSPDIR to your KSP install directory}:/ksp:ro
+    environment:
+      HOME: /tmp
+      KSPDIR: /ksp
+    command: ["make", "build"]
+
+  installer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - ${KSPDIR:?Set KSPDIR to your KSP install directory}:/ksp:rw
+    environment:
+      HOME: /tmp
+      KSPDIR: /ksp
+    command: ["make", "install"]
