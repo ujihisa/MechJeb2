@@ -237,6 +237,14 @@ namespace MuMech
             }
 
             const double StableWarpDelay = 0.25;
+            double timeToBurn = _ignitionUT - VesselState.time;
+
+            if (timeToBurn > 600)
+            {
+                Core.Attitude.SetAxisControl(false, false, false);
+                Core.Warp.WarpToUT(_ignitionUT - 600);
+                return;
+            }
 
             bool alignedAndSettled = MuUtils.PhysicsRunning() ? AlignedAndSettled() : AngleFromDirection() < Deg2Rad(10);
             if (alignedAndSettled)
@@ -250,15 +258,6 @@ namespace MuMech
             }
 
             _alignedSince = double.NaN;
-
-            double timeToBurn = _ignitionUT - VesselState.time;
-
-            if (timeToBurn > 600)
-            {
-                Core.Attitude.SetAxisControl(false, false, false);
-                Core.Warp.WarpToUT(_ignitionUT - 600);
-                return;
-            }
 
             if (!MuUtils.PhysicsRunning())
             {
