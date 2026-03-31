@@ -120,24 +120,24 @@ If you want the unstable dev version of MechJeb then :
 
 #### Linux
 
-The project uses Mono and Make to build the addon, make sure you have both installed.
+The recommended way to build on Linux is inside a Docker container, so you do not need to install Mono tooling on the host.
 
-1. (optional) Set your KSP directory
+1. Set your KSP directory (host path)
 
 ```sh
-export KSPDIR="${XDG_DATA_HOME}/Steam/SteamApps/common/Kerbal Space Program"
+export KSPDIR="${XDG_DATA_HOME:-$HOME/.local/share}/Steam/SteamApps/common/Kerbal Space Program"
 ```
 
-2. Build the mod
+2. Build the mod (inside container)
 
 ```sh
-make build
+docker compose run --rm --user "$(id -u):$(id -g)" builder
 ```
 
-3. (optional) Install the mod into your KSP directory
+3. (optional) Install the mod into your KSP directory (inside container)
 
 ```sh
-make install
+docker compose run --rm --user "$(id -u):$(id -g)" installer
 ```
 
 #### Windows
